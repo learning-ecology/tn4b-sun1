@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Shopping - Possibility, Impossibility & Shopping Vocabulary</title>
+  <style>
+    /* RESET & BASE STYLES */
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f172a;
+      color: #1e293b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 16:9 PRESENTATION CONTAINER */
+    #app-viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #090d16;
+      padding: 10px;
+    }
+
+    #presentation-frame {
+      width: 100%;
+      max-width: 1360px;
+      height: 100%;
+      max-height: 765px;
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      border: 3px solid #334155;
+    }
+
+    /* HEADER BAR */
+    header.deck-header {
+      height: 60px;
+      background: #1e293b;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 20;
+      border-bottom: 2px solid #334155;
+    }
+
+    .header-title-box { display: flex; align-items: center; gap: 12px; }
+    .lesson-badge { background: #ea580c; color: #fff; font-weight: 800; font-size: 14px; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .lesson-title-text { font-size: 18px; font-weight: 700; color: #f8fafc; }
+
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .score-badge { background: #0284c7; color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 6px; }
+    
+    .btn-header {
+      background: #334155; color: #f8fafc; border: none; padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .btn-header:hover { background: #475569; transform: translateY(-1px); }
+    .btn-header.active { background: #ea580c; color: white; }
+
+    /* PROGRESS BAR */
+    .progress-bar-container { height: 5px; background: #334155; width: 100%; position: relative; z-index: 20; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #ea580c, #f97316); width: 0%; transition: width 0.3s ease; }
+
+    /* SLIDE CANVAS */
+    #slide-stage {
+      flex: 1;
+      position: relative;
+      background: #fdfbf7;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      padding: 32px 48px;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    .slide.active { display: flex; opacity: 1; z-index: 10; }
+
+    /* SLIDE HEADER & CONTENT */
+    .slide-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px dashed #cbd5e1; padding-bottom: 12px; }
+    .slide-header h2 { font-size: 32px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 12px; }
+    .slide-subtitle { font-size: 18px; color: #ea580c; font-weight: 600; }
+
+    .slide-body { flex: 1; display: flex; flex-direction: column; gap: 20px; position: relative; font-size: 20px; color: #334155; line-height: 1.5; }
+
+    /* FOOTER NAV BAR */
+    footer.deck-footer {
+      height: 64px;
+      background: #ffffff;
+      border-top: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 20;
+    }
+
+    .footer-left { display: flex; align-items: center; gap: 12px; }
+    .teacher-credit { font-size: 14px; font-weight: 600; color: #64748b; }
+    
+    .footer-center { display: flex; align-items: center; gap: 12px; }
+    .slide-number-display { font-size: 16px; font-weight: 700; color: #334155; background: #f1f5f9; padding: 6px 14px; border-radius: 8px; }
+
+    .footer-right { display: flex; align-items: center; gap: 10px; }
+    .btn-nav {
+      background: #ea580c; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.3);
+    }
+    .btn-nav:hover { background: #c2410c; transform: translateY(-1px); }
+    .btn-nav:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
+    .btn-nav-secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; box-shadow: none; }
+    .btn-nav-secondary:hover { background: #e2e8f0; color: #0f172a; }
+
+    /* UI CARDS & LAYOUTS */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; height: 100%; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+    .card { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s; }
+    .card-highlight { border-color: #f97316; background: #fff7ed; }
+    .card-green { border-color: #10b981; background: #ecfdf5; }
+    .card-blue { border-color: #0284c7; background: #f0f9ff; }
+
+    /* TYPOGRAPHY & BUTTONS */
+    .btn-action {
+      background: #ea580c; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
+    }
+    .btn-action:hover { background: #c2410c; transform: scale(1.02); }
+    .btn-speaker { background: #0284c7; color: white; border: none; border-radius: 50%; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; flex-shrink: 0; transition: transform 0.2s; }
+    .btn-speaker:hover { transform: scale(1.1); background: #0369a1; }
+
+    /* CERTAINTY METER */
+    .certainty-scale { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+    .certainty-item { display: flex; align-items: center; background: white; border: 3px solid #cbd5e1; border-radius: 16px; padding: 18px 24px; cursor: pointer; transition: all 0.2s; }
+    .certainty-item:hover { transform: translateX(6px); }
+    .certainty-item.cant { border-color: #ef4444; background: #fef2f2; }
+    .certainty-item.possible { border-color: #f59e0b; background: #fffbeb; }
+    .certainty-item.must { border-color: #10b981; background: #ecfdf5; }
+
+    .certainty-tag { font-size: 24px; font-weight: 900; padding: 8px 16px; border-radius: 10px; min-width: 140px; text-align: center; color: white; }
+    .tag-cant { background: #ef4444; }
+    .tag-possible { background: #f59e0b; }
+    .tag-must { background: #10b981; }
+
+    .certainty-details { margin-left: 20px; flex: 1; }
+    .certainty-label { font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .certainty-desc { font-size: 16px; color: #475569; }
+    .certainty-vn { font-size: 15px; color: #0f172a; font-weight: 600; font-style: italic; }
+
+    /* FLASHCARD COMPONENT */
+    .flashcard-container { perspective: 1000px; width: 340px; height: 380px; margin: 0 auto; }
+    .flashcard { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+    .flashcard.flipped { transform: rotateY(180deg); }
+    .flashcard-front, .flashcard-back {
+      position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 3px solid #ea580c; box-shadow: 0 10px 25px rgba(0,0,0,0.1); background: white;
+    }
+    .flashcard-back { transform: rotateY(180deg); background: #fff7ed; border-color: #0284c7; }
+
+    /* MATCHING GAME */
+    .matching-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .matching-col { display: flex; flex-direction: column; gap: 12px; }
+    .match-card { background: white; border: 2px solid #cbd5e1; border-radius: 12px; padding: 14px 20px; cursor: pointer; font-size: 18px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
+    .match-card:hover { border-color: #ea580c; background: #fff7ed; }
+    .match-card.selected { border-color: #0284c7; background: #e0f2fe; color: #0369a1; }
+    .match-card.matched { border-color: #10b981; background: #d1fae5; color: #065f46; cursor: default; }
+
+    /* INTERACTIVE MAP */
+    .mall-map { position: relative; width: 100%; height: 380px; background: #e2e8f0; border-radius: 16px; border: 3px solid #94a3b8; overflow: hidden; }
+    .map-spot { position: absolute; background: #ea580c; color: white; padding: 8px 14px; border-radius: 20px; font-weight: 700; font-size: 15px; cursor: pointer; transform: translate(-50%, -50%); box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+    .map-spot:hover { transform: translate(-50%, -50%) scale(1.1); background: #0284c7; z-index: 10; }
+
+    /* SHOP BUILDER GRID */
+    .shop-builder { display: grid; grid-template-columns: 240px 1fr; gap: 20px; height: 100%; }
+    .palette { background: #f1f5f9; padding: 16px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; border: 2px solid #cbd5e1; }
+    .palette-item { background: white; border: 2px solid #94a3b8; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+    .palette-item.selected { border-color: #ea580c; background: #fff7ed; color: #c2410c; }
+    .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px; background: white; padding: 16px; border-radius: 16px; border: 2px dashed #94a3b8; }
+    .grid-cell { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; font-weight: 600; text-align: center; padding: 8px; transition: all 0.2s; }
+    .grid-cell:hover { background: #f1f5f9; border-color: #ea580c; }
+
+    /* MODALS */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 100; display: none; justify-content: center; align-items: center; }
+    .modal-overlay.active { display: flex; }
+    .modal-content { background: white; width: 90%; max-width: 800px; max-height: 85vh; border-radius: 20px; padding: 32px; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 18px; }
+
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 20px; }
+    .menu-item-btn { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .menu-item-btn:hover { border-color: #ea580c; background: #fff7ed; }
+    .menu-item-btn.current { border-color: #0284c7; background: #e0f2fe; font-weight: bold; }
+    .menu-section-title { grid-column: 1 / -1; font-weight: 800; color: #ea580c; font-size: 16px; text-transform: uppercase; margin-top: 10px; }
+
+    /* INPUTS & QUIZ STYLES */
+    input[type="text"], textarea, select { width: 100%; padding: 12px 16px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 18px; font-family: inherit; margin-top: 6px; outline: none; }
+    input[type="text"]:focus, textarea:focus, select:focus { border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.2); }
+
+    .quiz-option { background: white; border: 2px solid #cbd5e1; border-radius: 12px; padding: 14px 20px; margin-bottom: 10px; cursor: pointer; font-size: 18px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
+    .quiz-option:hover { border-color: #ea580c; background: #fff7ed; }
+    .quiz-option.correct { border-color: #10b981; background: #d1fae5; color: #065f46; }
+    .quiz-option.wrong { border-color: #ef4444; background: #fee2e2; color: #991b1b; }
+
+    .feedback-box { padding: 14px; border-radius: 10px; margin-top: 12px; font-weight: 700; font-size: 16px; display: none; }
+    .feedback-box.correct { background: #d1fae5; color: #065f46; display: block; }
+    .feedback-box.wrong { background: #fee2e2; color: #991b1b; display: block; }
+
+    /* SVG ICONS HELPER CLASS */
+    .svg-icon { width: 32px; height: 32px; fill: currentColor; }
+    .svg-icon-lg { width: 64px; height: 64px; }
+  </style>
+</head>
+<body>
+
+<div id="app-viewport">
+  <div id="presentation-frame">
+
+    <!-- HEADER -->
+    <header class="deck-header">
+      <div class="header-title-box">
+        <span class="lesson-badge">Unit 6</span>
+        <span class="lesson-title-text">Smart Shopping: Possibility & Impossibility</span>
+      </div>
+      <div class="header-actions">
+        <div class="score-badge" id="score-display">⭐ <span>0</span> pts</div>
+        <button class="btn-header" id="btn-teacher-notes" onclick="toggleTeacherNotes()">📝 Notes</button>
+        <button class="btn-header" id="btn-slide-menu" onclick="toggleSlideMenu()">☰ Menu</button>
+        <button class="btn-header" id="btn-fullscreen" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+      </div>
+    </header>
+
+    <!-- PROGRESS BAR -->
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progress-bar"></div>
+    </div>
+
+    <!-- SLIDE STAGE -->
+    <main id="slide-stage">
+
+      <!-- SLIDE 1: TITLE -->
+      <div class="slide active" id="slide-1">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 24px;">
+          <div style="background: #fff7ed; padding: 20px; border-radius: 50%; border: 4px solid #ea580c; display: flex;">
+            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          </div>
+          <div>
+            <h1 style="font-size: 52px; font-weight: 900; color: #0f172a; margin-bottom: 8px;">Smart Shopping</h1>
+            <p style="font-size: 24px; font-weight: 700; color: #ea580c;">Possibility, Impossibility & Shopping Vocabulary</p>
+            <p style="font-size: 18px; color: #64748b; margin-top: 6px;">Secondary English • CEFR A2+ • Lesson Presentation</p>
+          </div>
+          <button class="btn-action" onclick="goToSlide(2)">
+            Start Lesson ➔
+          </button>
+        </div>
+      </div>
+
+      <!-- SLIDE 2: OBJECTIVES -->
+      <div class="slide" id="slide-2">
+        <div class="slide-header">
+          <div>
+            <h2>🎯 Learning Objectives</h2>
+            <span class="slide-subtitle">What we will achieve today</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div style="font-weight: 800; font-size: 24px; color: #0f172a; margin-bottom: 12px;">Today I can...</div>
+          <div class="grid-2">
+            <div class="card card-highlight">
+              <h3 style="color: #ea580c; margin-bottom: 10px;">Grammar Targets</h3>
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px;">
+                <li>✅ Make logical guesses about mysterious objects</li>
+                <li>✅ Express degrees of certainty using <strong>must, could, may, might, can't</strong></li>
+                <li>✅ Distinguish between possibility and impossibility</li>
+              </ul>
+            </div>
+            <div class="card card-blue">
+              <h3 style="color: #0284c7; margin-bottom: 10px;">Vocabulary & Skills Targets</h3>
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px;">
+                <li>✅ Use 12 shopping-centre vocabulary words correctly</li>
+                <li>✅ Understand a speaker's main message and intention</li>
+                <li>✅ Design and present my dream shopping space</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 3: WARM-UP GAME -->
+      <div class="slide" id="slide-3">
+        <div class="slide-header">
+          <div>
+            <h2>🔍 Warm-up: What Is It?</h2>
+            <span class="slide-subtitle">Look at the close-up photo. Make your guess!</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0f172a;">
+              <div style="width: 220px; height: 220px; border-radius: 50%; overflow: hidden; border: 5px solid #ea580c; position: relative; display: flex; align-items: center; justify-content: center; background: #334155;">
+                <svg width="180" height="180" viewBox="0 0 24 24" fill="none" stroke="#f8fafc" stroke-width="2">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M12 7v10M7 12h10"/>
+                  <circle cx="8" cy="8" r="1.5" fill="#f97316"/>
+                  <circle cx="16" cy="8" r="1.5" fill="#f97316"/>
+                  <circle cx="8" cy="16" r="1.5" fill="#f97316"/>
+                  <circle cx="16" cy="16" r="1.5" fill="#f97316"/>
+                </svg>
+              </div>
+              <p style="color: #cbd5e1; font-size: 16px; margin-top: 14px;">Zoomed-in mysterious advert photo</p>
+            </div>
+            <div class="card" style="display: flex; flex-direction: column; justify-content: center; gap: 14px;">
+              <p style="font-weight: 700; font-size: 22px;">What do you think these blue shapes are?</p>
+              <div class="quiz-option" onclick="checkWarmup(this, false)">A. Blue cheese cubes</div>
+              <div class="quiz-option" onclick="checkWarmup(this, false)">B. Washing machine parts</div>
+              <div class="quiz-option" onclick="checkWarmup(this, true)">C. Buttons on a cooker or gadget</div>
+              <div class="quiz-option" onclick="checkWarmup(this, false)">D. Shampoo bottle caps</div>
+              <div id="warmup-feedback" class="feedback-box"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 4: GRAMMAR DISCOVERY 1 -->
+      <div class="slide" id="slide-4">
+        <div class="slide-header">
+          <div>
+            <h2>📖 Grammar in Context (Page 63)</h2>
+            <span class="slide-subtitle">Read and listen to Nate and Maizy's conversation</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card card-highlight">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <h3 style="color: #ea580c;">💬 Advert Objects Conversation</h3>
+                <button class="btn-speaker" onclick="speakText('Nate: OK, I think the first one shows those things on top of a cooker where you cook food. Maizy: No, they can\'t be. Look at the colour. They must be buttons. It could be a gadget. Nate: The second one might be a piece of kitchen equipment, but I am not sure. Maizy: Mmm, it may be.')">🔊 Listen</button>
+              </div>
+              <div style="font-size: 19px; line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">
+                <p><strong>Nate:</strong> OK, I think the first one shows those things on top of a cooker where you cook food.</p>
+                <p><strong>Maizy:</strong> No, they <span style="background: #fca5a5; padding: 2px 6px; border-radius: 4px; font-weight: bold;">can't</span> be. Look at the colour. They <span style="background: #6ee7b7; padding: 2px 6px; border-radius: 4px; font-weight: bold;">must</span> be buttons. It <span style="background: #fde047; padding: 2px 6px; border-radius: 4px; font-weight: bold;">could</span> be a gadget, but I don't know exactly what it is.</p>
+                <p><strong>Nate:</strong> Hmm. The second one <span style="background: #fde047; padding: 2px 6px; border-radius: 4px; font-weight: bold;">might</span> be a piece of kitchen equipment, but I'm not sure.</p>
+                <p><strong>Maizy:</strong> Mmm, it <span style="background: #fde047; padding: 2px 6px; border-radius: 4px; font-weight: bold;">may</span> be.</p>
+              </div>
+            </div>
+            <div class="card" style="display: flex; flex-direction: column; justify-content: center; gap: 16px;">
+              <h3 style="color: #0f172a;">Notice the Modal Verbs:</h3>
+              <div style="background: #f1f5f9; padding: 14px; border-radius: 10px;">
+                <p>🔴 <strong>can't</strong> → Maizy thinks cooker top is impossible.</p>
+              </div>
+              <div style="background: #f1f5f9; padding: 14px; border-radius: 10px;">
+                <p>🟡 <strong>could / might / may</strong> → Nate and Maizy think it is possible, but they are not 100% sure.</p>
+              </div>
+              <div style="background: #f1f5f9; padding: 14px; border-radius: 10px;">
+                <p>🟢 <strong>must</strong> → Maizy feels very certain they are buttons.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 5: GRAMMAR DISCOVERY 2 -->
+      <div class="slide" id="slide-5">
+        <div class="slide-header">
+          <div>
+            <h2>🤔 How Sure Are You?</h2>
+            <span class="slide-subtitle">Analyzing meaning and degrees of certainty</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-blue" style="text-align: center; padding: 30px;">
+            <p style="font-size: 28px; font-weight: 800; color: #0369a1; margin-bottom: 12px;">"It might be a piece of kitchen equipment."</p>
+            <p style="font-size: 22px; color: #334155;">Question: Is the speaker 100% sure?</p>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 24px;">
+              <button class="btn-action" style="background: #ef4444;" onclick="alert('Correct! Might means it is possible, but we are NOT 100% sure.')">No, not sure (50%)</button>
+              <button class="btn-action" style="background: #94a3b8;" onclick="alert('Try again! \'Might\' means possible, not 100% certain.')">Yes, 100% sure</button>
+            </div>
+          </div>
+
+          <div class="grid-3" style="margin-top: 20px;">
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 32px; margin-bottom: 8px;">❌</div>
+              <h4 style="color: #ef4444; font-size: 22px;">IMPOSSIBLE</h4>
+              <p style="font-size: 16px; color: #64748b; margin-top: 6px;">You think it cannot be true.</p>
+              <div style="font-weight: 800; font-size: 24px; color: #ef4444; margin-top: 10px;">can't</div>
+            </div>
+
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 32px; margin-bottom: 8px;">❓</div>
+              <h4 style="color: #f59e0b; font-size: 22px;">POSSIBLE</h4>
+              <p style="font-size: 16px; color: #64748b; margin-top: 6px;">You are not sure.</p>
+              <div style="font-weight: 800; font-size: 22px; color: #f59e0b; margin-top: 10px;">could / may / might</div>
+            </div>
+
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
+              <h4 style="color: #10b981; font-size: 22px;">VERY LIKELY</h4>
+              <p style="font-size: 16px; color: #64748b; margin-top: 6px;">You are almost certain.</p>
+              <div style="font-weight: 800; font-size: 24px; color: #10b981; margin-top: 10px;">must</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 6: CERTAINTY SCALE (INTERACTIVE) -->
+      <div class="slide" id="slide-6">
+        <div class="slide-header">
+          <div>
+            <h2>📊 The Certainty Scale</h2>
+            <span class="slide-subtitle">Click each modal verb to hear examples and Vietnamese meaning</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="certainty-scale">
+            
+            <div class="certainty-item cant" onclick="speakText('can\'t. It can\'t be a car. It only has two wheels!')">
+              <div class="certainty-tag tag-cant">can't</div>
+              <div class="certainty-details">
+                <div class="certainty-label" style="color: #ef4444;">Impossible</div>
+                <div class="certainty-desc">"It can't be a car. It's only got two wheels!"</div>
+                <div class="certainty-vn">💡 Tiếng Việt: Chắc chắn không thể là...</div>
+              </div>
+              <button class="btn-speaker">🔊</button>
+            </div>
+
+            <div class="certainty-item possible" onclick="speakText('could, may, might. It might be a mobile phone.')">
+              <div class="certainty-tag tag-possible">could / may / might</div>
+              <div class="certainty-details">
+                <div class="certainty-label" style="color: #d97706;">Possible / Not Sure</div>
+                <div class="certainty-desc">"It could / may / might be a mobile phone, but I'm not sure."</div>
+                <div class="certainty-vn">💡 Tiếng Việt: Có thể là... (không chắc chắn)</div>
+              </div>
+              <button class="btn-speaker">🔊</button>
+            </div>
+
+            <div class="certainty-item must" onclick="speakText('must. It is round and shiny. It must be a ring!')">
+              <div class="certainty-tag tag-must">must</div>
+              <div class="certainty-details">
+                <div class="certainty-label" style="color: #10b981;">Very Likely / Almost Certain</div>
+                <div class="certainty-desc">"It's round and made of gold. It must be a ring!"</div>
+                <div class="certainty-vn">💡 Tiếng Việt: Hẳn là / Chắc chắn là...</div>
+              </div>
+              <button class="btn-speaker">🔊</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 7: GRAMMAR FORM & COMMON MISTAKES -->
+      <div class="slide" id="slide-7">
+        <div class="slide-header">
+          <div>
+            <h2>📐 Grammar Form</h2>
+            <span class="slide-subtitle">Modal verb + bare infinitive (without "to")</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-highlight" style="text-align: center; padding: 20px;">
+            <p style="font-size: 26px; font-weight: 800; color: #ea580c;">
+              Subject + <span style="color: #0284c7;">[ modal verb ]</span> + <span style="color: #10b981;">infinitive (without "to")</span>
+            </p>
+            <p style="font-size: 18px; color: #475569; margin-top: 8px;">Example: It + <strong>might</strong> + <strong>be</strong> a mobile.</p>
+          </div>
+
+          <div class="grid-2" style="margin-top: 10px;">
+            <div class="card" style="border-color: #ef4444; background: #fef2f2;">
+              <h3 style="color: #ef4444; margin-bottom: 12px;">❌ Common Mistakes</h3>
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px; font-size: 18px;">
+                <li>❌ "It might <strong>to be</strong> a mobile." <br><small style="color: #991b1b;">(Do NOT add 'to')</small></li>
+                <li>❌ "It must <strong>is</strong> a ring." <br><small style="color: #991b1b;">(Use bare verb 'be', not 'is/are')</small></li>
+                <li>❌ "They can't <strong>are</strong> buttons."</li>
+              </ul>
+            </div>
+
+            <div class="card" style="border-color: #10b981; background: #ecfdf5;">
+              <h3 style="color: #10b981; margin-bottom: 12px;">✅ Correct Sentences</h3>
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px; font-size: 18px;">
+                <li>✅ "It might <strong>be</strong> a mobile."</li>
+                <li>✅ "It must <strong>be</strong> a ring."</li>
+                <li>✅ "They can't <strong>be</strong> buttons."</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 8: GUIDED PRACTICE 1 -->
+      <div class="slide" id="slide-8">
+        <div class="slide-header">
+          <div>
+            <h2>✍️ Practice A: Choose the Modal</h2>
+            <span class="slide-subtitle">Select the best modal verb based on the clue</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card">
+            <p style="font-weight: 700; font-size: 22px; margin-bottom: 16px;">1. It's round and made of gold. It ___ be a ring.</p>
+            <div style="display: flex; gap: 16px;">
+              <button class="quiz-option" style="flex: 1;" onclick="checkPracticeA(this, false)">might (50%)</button>
+              <button class="quiz-option" style="flex: 1;" onclick="checkPracticeA(this, true)">must (99%)</button>
+              <button class="quiz-option" style="flex: 1;" onclick="checkPracticeA(this, false)">can't (0%)</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <p style="font-weight: 700; font-size: 22px; margin-bottom: 16px;">2. It has four wheels, but it's very tiny and made of plastic. It ___ be a real car.</p>
+            <div style="display: flex; gap: 16px;">
+              <button class="quiz-option" style="flex: 1;" onclick="checkPracticeA(this, true)">can't (0%)</button>
+              <button class="quiz-option" style="flex: 1;" onclick="checkPracticeA(this, false)">must (99%)</button>
+              <button class="quiz-option" style="flex: 1;" onclick="checkPracticeA(this, false)">may (50%)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 9: GUIDED PRACTICE 2 -->
+      <div class="slide" id="slide-9">
+        <div class="slide-header">
+          <div>
+            <h2>💡 Practice B: Meaning Check</h2>
+            <span class="slide-subtitle">What does the speaker mean?</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-highlight">
+            <p style="font-weight: 800; font-size: 24px; color: #ea580c; margin-bottom: 14px;">Sentence: "It can't be a car."</p>
+            <p style="font-size: 20px; font-weight: 700; margin-bottom: 12px;">What does this mean?</p>
+            <div class="quiz-option" onclick="checkPracticeB(this, false)">A. I am sure it is a car.</div>
+            <div class="quiz-option" onclick="checkPracticeB(this, true)">B. I am sure it is IMPOSSIBLE that it is a car.</div>
+            <div class="quiz-option" onclick="checkPracticeB(this, false)">C. It could be a car, but I am not sure.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 10: GUIDED PRACTICE 3 -->
+      <div class="slide" id="slide-10">
+        <div class="slide-header">
+          <div>
+            <h2>🖼️ Practice C: Picture Clues</h2>
+            <span class="slide-subtitle">Guess the mystery object from description</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; background: #0f172a; color: white;">
+              <div style="font-size: 80px; margin-bottom: 10px;">📱</div>
+              <p style="font-size: 20px; color: #f97316; font-weight: 700;">Clues:</p>
+              <p>• It has a glass screen.</p>
+              <p>• You use it to call friends.</p>
+              <p>• It fits in your pocket.</p>
+            </div>
+            <div class="card" style="display: flex; flex-direction: column; justify-content: center; gap: 14px;">
+              <p style="font-weight: 700; font-size: 22px;">Complete the statement:</p>
+              <p style="font-size: 24px; font-weight: 800; color: #0284c7;">"It _____ be a mobile phone."</p>
+              <div class="quiz-option" onclick="checkPracticeC(this, true)">must (It's almost certain!)</div>
+              <div class="quiz-option" onclick="checkPracticeC(this, false)">can't (Impossible)</div>
+              <div class="quiz-option" onclick="checkPracticeC(this, false)">might not</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 11: TEXTBOOK PRODUCT GUESSING GAME -->
+      <div class="slide" id="slide-11">
+        <div class="slide-header">
+          <div>
+            <h2>📦 Textbook Exercise 3a: Product Bank</h2>
+            <span class="slide-subtitle">Complete with: car • cheese • mobile • ring • shampoo • spaghetti</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div style="background: #fff7ed; padding: 12px; border-radius: 12px; border: 2px solid #ea580c; font-weight: bold; text-align: center; margin-bottom: 10px;">
+            Word Bank: car | cheese | mobile | ring | shampoo | spaghetti
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 18px;">
+            <div class="card" style="padding: 12px 20px;">
+              1. It's a <input type="text" id="ex3-1" placeholder="..." style="width: 120px; display: inline-block; padding: 4px 8px;">. — No, it <strong>can't be</strong>. It's only got two wheels! (car)
+            </div>
+            <div class="card" style="padding: 12px 20px;">
+              2. It's a <input type="text" id="ex3-2" placeholder="..." style="width: 120px; display: inline-block; padding: 4px 8px;">. — Yes, it <strong>must be</strong>. It's round and made of gold. (ring)
+            </div>
+            <div class="card" style="padding: 12px 20px;">
+              3. It's <input type="text" id="ex3-3" placeholder="..." style="width: 120px; display: inline-block; padding: 4px 8px;">. — Mmm, it <strong>could be</strong>. It's in a bottle. (shampoo)
+            </div>
+            <div class="card" style="padding: 12px 20px;">
+              4. It's <input type="text" id="ex3-4" placeholder="..." style="width: 120px; display: inline-block; padding: 4px 8px;">. — Yes, it <strong>must be</strong>. It's long and thin. (spaghetti)
+            </div>
+          </div>
+          <button class="btn-action" style="margin-top: 10px; align-self: flex-start;" onclick="checkEx3()">Check Answers</button>
+        </div>
+      </div>
+
+      <!-- SLIDE 12: TEXTBOOK CONVERSATION (EXERCISE 4) -->
+      <div class="slide" id="slide-12">
+        <div class="slide-header">
+          <div>
+            <h2>💬 Textbook Exercise 4: Anna & Kristen</h2>
+            <span class="slide-subtitle">Fill in: can, can't, must, might, may, could</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card card-highlight">
+              <h3 style="color: #ea580c; margin-bottom: 10px;">Dialogue 1: The Sound</h3>
+              <p><strong>Anna:</strong> What's that sound? It sounds like water.</p>
+              <p><strong>Kristen:</strong> Mmm, it (1) <select id="ex4-1"><option value="">--</option><option value="might">might</option><option value="must">must</option></select> be rain. But it sounds inside.</p>
+              <p><strong>Anna:</strong> No, it (2) <select id="ex4-2"><option value="">--</option><option value="can't">can't</option><option value="must">must</option></select> be rain – look. It (3) <select id="ex4-3"><option value="">--</option><option value="must">must</option><option value="can't">can't</option></select> be the washing machine!</p>
+            </div>
+            <div class="card card-blue">
+              <h3 style="color: #0284c7; margin-bottom: 10px;">Dialogue 2: The Smell</h3>
+              <p><strong>Kristen:</strong> What's that smell? Phew! It's really strong.</p>
+              <p><strong>Anna:</strong> I'm not sure. It (4) <select id="ex4-4"><option value="">--</option><option value="might">might</option><option value="must">must</option></select> be those flowers over there.</p>
+              <p><strong>Kristen:</strong> No, it (5) <select id="ex4-5"><option value="">--</option><option value="can't">can't</option><option value="could">could</option></select> be the flowers, they're plastic. Look, it (6) <select id="ex4-6"><option value="">--</option><option value="must">must</option><option value="can't">can't</option></select> be his new fragrance!</p>
+            </div>
+          </div>
+          <button class="btn-action" style="margin-top: 14px; align-self: center;" onclick="checkEx4()">Check Dialogue Answers</button>
+        </div>
+      </div>
+
+      <!-- SLIDE 13: EXERCISE 5 PHOTO IDENTIFICATION -->
+      <div class="slide" id="slide-13">
+        <div class="slide-header">
+          <div>
+            <h2>📷 Textbook Exercise 5: Photo Challenge</h2>
+            <span class="slide-subtitle">Identify objects from zoomed photos (Page 63)</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-3">
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 40px;">🔧</div>
+              <p style="font-weight: bold; margin-top: 6px;">Photo 1: Metal tool</p>
+              <p style="font-size: 15px; color: #64748b;">"It must be a spanner / wrench!"</p>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 40px;">💍</div>
+              <p style="font-weight: bold; margin-top: 6px;">Photo 2: Round object</p>
+              <p style="font-size: 15px; color: #64748b;">"It could be a ring or a lens."</p>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 40px;">🔑</div>
+              <p style="font-weight: bold; margin-top: 6px;">Photo 3: Jagged metal</p>
+              <p style="font-size: 15px; color: #64748b;">"It must be a key!"</p>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 40px;">🕶️</div>
+              <p style="font-weight: bold; margin-top: 6px;">Photo 4: Dark glass</p>
+              <p style="font-size: 15px; color: #64748b;">"It might be sunglasses."</p>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 40px;">💄</div>
+              <p style="font-weight: bold; margin-top: 6px;">Photo 5: Pink cylinder</p>
+              <p style="font-size: 15px; color: #64748b;">"It may be lipstick!"</p>
+            </div>
+            <div class="card" style="text-align: center;">
+              <div style="font-size: 40px;">🌀</div>
+              <p style="font-weight: bold; margin-top: 6px;">Photo 6: Metal drum</p>
+              <p style="font-size: 15px; color: #64748b;">"It must be a washing machine!"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 14: CREATE YOUR OWN CLUES -->
+      <div class="slide" id="slide-14">
+        <div class="slide-header">
+          <div>
+            <h2>✍️ Create Your Own Clues!</h2>
+            <span class="slide-subtitle">Choose a secret product & write clues for a friend</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card card-highlight">
+              <h3 style="color: #ea580c; margin-bottom: 10px;">Sentence Scaffold:</h3>
+              <p>• It is made of... (wood / plastic / metal / gold)</p>
+              <p>• It has... (wheels / buttons / a screen)</p>
+              <p>• It is used for...</p>
+              <p>• It <strong>might be</strong> a...</p>
+              <p>• It <strong>can't be</strong> a... because...</p>
+            </div>
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h3 style="margin-bottom: 8px;">Your Clues Draft:</h3>
+                <textarea id="student-clues" rows="5" placeholder="Write your clues here (e.g. It's long and thin. It's made of plastic...)"></textarea>
+              </div>
+              <button class="btn-action" style="margin-top: 10px;" onclick="alert('Great clues! Now read them to your partner!')">Show Example Clue</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 15: VOCABULARY PART 1 -->
+      <div class="slide" id="slide-15">
+        <div class="slide-header">
+          <div>
+            <h2>🛒 Shopping Vocabulary (1-8)</h2>
+            <span class="slide-subtitle">Store Layout & Equipment (Page 64)</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-4">
+            <div class="card" style="text-align: center; padding: 14px;">
+              <div style="font-size: 40px;">🛒</div>
+              <h4 style="color: #ea580c;">1. Trolley</h4>
+              <p style="font-size: 13px; color: #64748b;">Basket on wheels for shopping</p>
+              <button class="btn-speaker" style="margin-top: 6px;" onclick="speakText('Trolley. A large basket on wheels.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 14px;">
+              <div style="font-size: 40px;">💳</div>
+              <h4 style="color: #ea580c;">2. Checkout</h4>
+              <p style="font-size: 13px; color: #64748b;">Place where you pay for items</p>
+              <button class="btn-speaker" style="margin-top: 6px;" onclick="speakText('Checkout. The place where you pay.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 14px;">
+              <div style="font-size: 40px;">🖼️</div>
+              <h4 style="color: #ea580c;">3. Shop window</h4>
+              <p style="font-size: 13px; color: #64748b;">Large window to show goods</p>
+              <button class="btn-speaker" style="margin-top: 6px;" onclick="speakText('Shop window.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 14px;">
+              <div style="font-size: 40px;">🗄️</div>
+              <h4 style="color: #ea580c;">4. Shelf</h4>
+              <p style="font-size: 13px; color: #64748b;">Flat board for standing items</p>
+              <button class="btn-speaker" style="margin-top: 6px;" onclick="speakText('Shelf.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 14px;">
+              <div style="font-size: 40px;">🧺</div>
+              <h4 style="color: #ea580c;">5. Basket</h4>
+              <p style="font-size: 13px; color: #64748b;">Hand-held container for items</p>
+              <button class="btn-speaker" style="margin-top: 6px;" onclick="speakText('Basket.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 14px;">
+              <div style="font-size: 40px;">🪜</div>
+              <h4 style="color: #ea580c;">6. Escalator</h4>
+              <p style="font-size: 13px; color: #64748b;">Moving stairs between floors</p>
+              <button class="btn-speaker" style="margin-top: 6px;" onclick="speakText('Escalator.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 14px;">
+              <div style="font-size: 40px;">🚪</div>
+              <h4 style="color: #ea580c;">7. Exit</h4>
+              <p style="font-size: 13px; color: #64748b;">Door to go out of the building</p>
+              <button class="btn-speaker" style="margin-top: 6px;" onclick="speakText('Exit.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 14px;">
+              <div style="font-size: 40px;">💵</div>
+              <h4 style="color: #ea580c;">8. Cash desk</h4>
+              <p style="font-size: 13px; color: #64748b;">Desk with till/cash register</p>
+              <button class="btn-speaker" style="margin-top: 6px;" onclick="speakText('Cash desk.')">🔊</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 16: VOCABULARY PART 2 -->
+      <div class="slide" id="slide-16">
+        <div class="slide-header">
+          <div>
+            <h2>👥 Shopping Vocabulary (9-12)</h2>
+            <span class="slide-subtitle">People & Specialized Areas</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-4">
+            <div class="card" style="text-align: center; padding: 20px;">
+              <div style="font-size: 50px;">🕵️</div>
+              <h4 style="color: #0284c7; font-size: 20px; margin-top: 8px;">9. Store detective</h4>
+              <p style="font-size: 14px; color: #64748b; margin-top: 6px;">Person who protects against theft</p>
+              <button class="btn-speaker" style="margin-top: 10px;" onclick="speakText('Store detective.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 20px;">
+              <div style="font-size: 50px;">🏢</div>
+              <h4 style="color: #0284c7; font-size: 20px; margin-top: 8px;">10. Department</h4>
+              <p style="font-size: 14px; color: #64748b; margin-top: 6px;">Section of a large store</p>
+              <button class="btn-speaker" style="margin-top: 10px;" onclick="speakText('Department.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 20px;">
+              <div style="font-size: 50px;">👗</div>
+              <h4 style="color: #0284c7; font-size: 20px; margin-top: 8px;">11. Changing room</h4>
+              <p style="font-size: 14px; color: #64748b; margin-top: 6px;">Room to try on clothes</p>
+              <button class="btn-speaker" style="margin-top: 10px;" onclick="speakText('Changing room.')">🔊</button>
+            </div>
+            <div class="card" style="text-align: center; padding: 20px;">
+              <div style="font-size: 50px;">🛍️</div>
+              <h4 style="color: #0284c7; font-size: 20px; margin-top: 8px;">12. Customer</h4>
+              <p style="font-size: 14px; color: #64748b; margin-top: 6px;">Person buying items in a shop</p>
+              <button class="btn-speaker" style="margin-top: 10px;" onclick="speakText('Customer.')">🔊</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 17: FLASHCARDS -->
+      <div class="slide" id="slide-17">
+        <div class="slide-header">
+          <div>
+            <h2>🎴 Vocabulary Flashcards</h2>
+            <span class="slide-subtitle">Click card to flip • Review all 12 words</span>
+          </div>
+        </div>
+        <div class="slide-body" style="align-items: center; justify-content: center;">
+          <div class="flashcard-container">
+            <div class="flashcard" id="fc-card" onclick="flipFlashcard()">
+              <div class="flashcard-front">
+                <div id="fc-icon" style="font-size: 80px; margin-bottom: 10px;">🛒</div>
+                <h3 id="fc-word" style="font-size: 32px; color: #ea580c;">trolley</h3>
+                <p id="fc-phonetic" style="color: #64748b; margin-top: 4px;">/ˈtrɒli/</p>
+                <p style="font-size: 14px; color: #94a3b8; margin-top: 20px;">(Click to flip)</p>
+              </div>
+              <div class="flashcard-back">
+                <h4 style="color: #0284c7; font-size: 20px; margin-bottom: 8px;">Definition:</h4>
+                <p id="fc-def" style="font-size: 18px; color: #334155; margin-bottom: 12px;">A large basket on wheels used for carrying things in a supermarket.</p>
+                <p id="fc-vn" style="font-size: 16px; color: #ea580c; font-weight: bold; font-style: italic;">Xe đẩy siêu thị</p>
+                <button class="btn-speaker" style="margin-top: 16px;" onclick="event.stopPropagation(); speakFlashcard();">🔊 Speak</button>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 16px; margin-top: 20px;">
+            <button class="btn-nav btn-nav-secondary" onclick="prevFlashcard()">◀ Previous</button>
+            <button class="btn-nav" onclick="nextFlashcard()">Next ▶</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 18: VOCABULARY MATCHING -->
+      <div class="slide" id="slide-18">
+        <div class="slide-header">
+          <div>
+            <h2>🧩 Vocabulary Matching Game</h2>
+            <span class="slide-subtitle">Tap a word on the left, then tap its matching definition</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="matching-grid">
+            <div class="matching-col" id="match-words-col">
+              <!-- Rendered via JS -->
+            </div>
+            <div class="matching-col" id="match-defs-col">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 19: SHOPPING MALL INTERACTIVE MAP -->
+      <div class="slide" id="slide-19">
+        <div class="slide-header">
+          <div>
+            <h2>🗺️ Interactive Shopping Mall Map</h2>
+            <span class="slide-subtitle">Click the hotspots to explore store locations</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="mall-map">
+            <div class="map-spot" style="top: 25%; left: 20%;" onclick="showMapDetail('Shop Window', 'Glass display at the front of a store.')">🖼️ Shop Window</div>
+            <div class="map-spot" style="top: 40%; left: 50%;" onclick="showMapDetail('Escalator', 'Moving stairs to take shoppers up.')">🪜 Escalator</div>
+            <div class="map-spot" style="top: 75%; left: 80%;" onclick="showMapDetail('Checkout', 'Pay desk with cash register.')">💳 Checkout</div>
+            <div class="map-spot" style="top: 80%; left: 20%;" onclick="showMapDetail('Changing Room', 'Private room to try on clothes.')">👗 Changing Room</div>
+            <div class="map-spot" style="top: 15%; left: 85%;" onclick="showMapDetail('Exit', 'Emergency and main exit doors.')">🚪 Exit</div>
+          </div>
+          <div id="map-detail-card" class="card card-highlight" style="margin-top: 14px; display: none;">
+            <!-- JS populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 20: LISTENING PREPARATION -->
+      <div class="slide" id="slide-20">
+        <div class="slide-header">
+          <div>
+            <h2>🎧 Listening Warm-Up</h2>
+            <span class="slide-subtitle">Theme: How Shops Make Us Spend Money</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-3">
+            <div class="card card-highlight">
+              <h4 style="color: #ea580c; margin-bottom: 8px;">Question 1</h4>
+              <p>What sort of shops and services can you find in shopping centres in your area?</p>
+            </div>
+            <div class="card card-blue">
+              <h4 style="color: #0284c7; margin-bottom: 8px;">Question 2</h4>
+              <p>What are the advantages and disadvantages of large shopping centres?</p>
+            </div>
+            <div class="card card-green">
+              <h4 style="color: #10b981; margin-bottom: 8px;">Question 3</h4>
+              <p>Have you ever bought something you didn't plan to buy? Why?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 21: LISTENING AUDIO PLAYER -->
+      <div class="slide" id="slide-21">
+        <div class="slide-header">
+          <div>
+            <h2>📻 Smart Shopping Interview (Track 2.18)</h2>
+            <span class="slide-subtitle">Strategy: Understand the speaker's intention</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-highlight" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 30px;">
+            <div style="font-size: 60px;">🎧</div>
+            <h3 style="color: #ea580c; font-size: 26px;">Interview with James Lewis (Retail Expert)</h3>
+            <p style="color: #475569; max-width: 600px;">Listen carefully to how shopping centres encourage shoppers to stay longer and buy items they didn't plan to purchase.</p>
+            
+            <div style="display: flex; gap: 14px; margin-top: 10px;">
+              <button class="btn-action" onclick="playListeningAudio()">▶ Play Audio</button>
+              <button class="btn-nav btn-nav-secondary" onclick="stopListeningAudio()">⏹ Stop</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 22: LISTENING MAIN IDEA -->
+      <div class="slide" id="slide-22">
+        <div class="slide-header">
+          <div>
+            <h2>🎯 Listening Task 1: Main Idea</h2>
+            <span class="slide-subtitle">What is the speaker's main goal?</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-blue">
+            <p style="font-weight: 800; font-size: 22px; color: #0284c7; margin-bottom: 16px;">The interviewer wants to...</p>
+            <div class="quiz-option" onclick="checkListening1(this, false)">A. advertise shops at Towngreen Centre.</div>
+            <div class="quiz-option" onclick="checkListening1(this, false)">B. encourage shoppers to spend more.</div>
+            <div class="quiz-option" onclick="checkListening1(this, true)">C. help shoppers to understand why they spend.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 23: LISTENING DETAIL QUESTIONS -->
+      <div class="slide" id="slide-23">
+        <div class="slide-header">
+          <div>
+            <h2>📝 Listening Task 2: Detailed Comprehension</h2>
+            <span class="slide-subtitle">Choose the correct answers from the interview</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card">
+              <p style="font-weight: 700; margin-bottom: 10px;">1. Shops are designed so you...</p>
+              <div class="quiz-option" onclick="checkListDetail(this, false)">A. find things quickly</div>
+              <div class="quiz-option" onclick="checkListDetail(this, true)">B. stay as long as possible</div>
+              <div class="quiz-option" onclick="checkListDetail(this, false)">C. buy popular items</div>
+            </div>
+            <div class="card">
+              <p style="font-weight: 700; margin-bottom: 10px;">2. Expensive items are placed on...</p>
+              <div class="quiz-option" onclick="checkListDetail(this, true)">A. shelves at eye level</div>
+              <div class="quiz-option" onclick="checkListDetail(this, false)">B. lower shelves</div>
+              <div class="quiz-option" onclick="checkListDetail(this, false)">C. top hidden shelves</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 24: SPEAKER INTENTION STRATEGY -->
+      <div class="slide" id="slide-24">
+        <div class="slide-header">
+          <div>
+            <h2>🧠 Strategy: Speaker's Intention</h2>
+            <span class="slide-subtitle">Classify statements from the listening</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-highlight">
+            <p style="font-weight: 700; font-size: 20px; margin-bottom: 12px;">"You should make a shopping list before you leave home."</p>
+            <p style="color: #64748b; font-size: 16px; margin-bottom: 12px;">Is this statement an Information, Opinion, or Advice/Suggestion?</p>
+            <div style="display: flex; gap: 14px;">
+              <button class="quiz-option" style="flex: 1;" onclick="checkIntention(this, false)">Information</button>
+              <button class="quiz-option" style="flex: 1;" onclick="checkIntention(this, false)">Opinion</button>
+              <button class="quiz-option" style="flex: 1;" onclick="checkIntention(this, true)">Advice / Suggestion</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 25: TRANSCRIPT (TEACHER CONTROLLED) -->
+      <div class="slide" id="slide-25">
+        <div class="slide-header">
+          <div>
+            <h2>📄 Listening Transcript</h2>
+            <span class="slide-subtitle">Teacher-controlled view of interview script</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card" style="font-size: 16px; line-height: 1.6; max-height: 400px; overflow-y: auto; background: #f8fafc;">
+            <p><strong>Interviewer:</strong> Today on Smart Shopping, we are talking to retail expert James Lewis. James, how do shopping centres make us spend more money?</p>
+            <p><strong>James:</strong> Well, first, layout is key. Shopping centres are designed so you <strong>stay as long as possible</strong>. The escalators are placed far apart so you have to walk past many shop windows!</p>
+            <p><strong>Interviewer:</strong> What about product placement on shelves?</p>
+            <p><strong>James:</strong> Most expensive items are on <strong>shelves at eye level</strong>, where you see them first. Special offers are usually placed near the entrance on the right because people naturally look right!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 26: GRAMMAR + VOCAB MIX -->
+      <div class="slide" id="slide-26">
+        <div class="slide-header">
+          <div>
+            <h2>🔀 Grammar + Vocabulary Mix</h2>
+            <span class="slide-subtitle">Apply modal verbs to shopping situations</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-highlight">
+            <p style="font-size: 22px; font-weight: 700; margin-bottom: 14px;">"You see a diamond ring in a luxury shop window marked \$5,000."</p>
+            <p style="font-size: 20px; color: #0284c7; font-weight: bold; margin-bottom: 12px;">"It ____ be very expensive!"</p>
+            <div style="display: flex; gap: 14px;">
+              <button class="quiz-option" style="flex: 1;" onclick="checkMix(this, true)">must</button>
+              <button class="quiz-option" style="flex: 1;" onclick="checkMix(this, false)">can't</button>
+              <button class="quiz-option" style="flex: 1;" onclick="checkMix(this, false)">might not</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 27: SHOPPING MYSTERY GAME -->
+      <div class="slide" id="slide-27">
+        <div class="slide-header">
+          <div>
+            <h2>🎁 Shopping Mystery Bag</h2>
+            <span class="slide-subtitle">Guess the object in the shopping bag from clues!</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ea580c; color: white;">
+              <div style="font-size: 90px;">🛍️</div>
+              <p style="font-weight: 800; font-size: 24px; margin-top: 10px;">Mystery Item #1</p>
+            </div>
+            <div class="card" style="display: flex; flex-direction: column; justify-content: center; gap: 12px;">
+              <p style="font-weight: bold;">Clue 1: It is in a plastic bottle.</p>
+              <p style="font-weight: bold;">Clue 2: You use it in the bathroom when washing your hair.</p>
+              <input type="text" id="mystery-input" placeholder="Type your guess (e.g. shampoo)...">
+              <button class="btn-action" style="margin-top: 8px;" onclick="checkMystery()">Submit Guess</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 28: SPEAKING TASK 1 -->
+      <div class="slide" id="slide-28">
+        <div class="slide-header">
+          <div>
+            <h2>🗣️ Speaking 1: Guess the Object</h2>
+            <span class="slide-subtitle">Pair Work: Student A describes, Student B guesses</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card card-highlight">
+              <h3 style="color: #ea580c; margin-bottom: 10px;">Student A (Clue Giver)</h3>
+              <p>• "It's made of..."</p>
+              <p>• "You can find it in a..."</p>
+              <p>• "It has..."</p>
+            </div>
+            <div class="card card-blue">
+              <h3 style="color: #0284c7; margin-bottom: 10px;">Student B (Guesser)</h3>
+              <p>• "It might be a..."</p>
+              <p>• "No, it can't be a... because..."</p>
+              <p>• "It must be a...!"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 29: SPEAKING TASK 2 -->
+      <div class="slide" id="slide-29">
+        <div class="slide-header">
+          <div>
+            <h2>🗣️ Speaking 2: Shopping Habits</h2>
+            <span class="slide-subtitle">Discuss these questions with your partner</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card">
+            <ul style="display: flex; flex-direction: column; gap: 16px; font-size: 20px;">
+              <li>1. Do you prefer shopping in small local shops or big shopping centres? Why?</li>
+              <li>2. What was the last thing you bought without planning?</li>
+              <li>3. Do you ever look at shop windows just for fun?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 30: DREAM SHOP FLOOR PLAN BUILDER -->
+      <div class="slide" id="slide-30">
+        <div class="slide-header">
+          <div>
+            <h2>🎨 Dream Shop Builder</h2>
+            <span class="slide-subtitle">Select an item on the left, then click grid cells to place it</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="shop-builder">
+            <div class="palette">
+              <div style="font-weight: 800; font-size: 15px; color: #ea580c;">PALETTE</div>
+              <div class="palette-item selected" onclick="selectPalette('🛒 Trolley')">🛒 Trolley</div>
+              <div class="palette-item" onclick="selectPalette('💳 Checkout')">💳 Checkout</div>
+              <div class="palette-item" onclick="selectPalette('🗄️ Shelf')">🗄️ Shelf</div>
+              <div class="palette-item" onclick="selectPalette('🪜 Escalator')">🪜 Escalator</div>
+              <div class="palette-item" onclick="selectPalette('👗 Changing Room')">👗 Changing Room</div>
+              <div class="palette-item" onclick="selectPalette('🚪 Exit')">🚪 Exit</div>
+            </div>
+            <div class="shop-grid">
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+              <div class="grid-cell" onclick="placeGrid(this)">Empty</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 31: PRESENT YOUR DREAM SHOP -->
+      <div class="slide" id="slide-31">
+        <div class="slide-header">
+          <div>
+            <h2>🎤 Present Your Dream Shop</h2>
+            <span class="slide-subtitle">Use these structures to present your shop to class</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-highlight">
+            <h3 style="color: #ea580c; margin-bottom: 10px;">Presentation Frames:</h3>
+            <p>• "Our dream shop is called <strong>[ Shop Name ]</strong>."</p>
+            <p>• "It sells <strong>[ Products ]</strong>."</p>
+            <p>• "When you enter, you can see the <strong>[ Escalator / Checkout ]</strong> next to..."</p>
+            <p>• "Customers might like our shop because..."</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 32: REVIEW GAME 1 -->
+      <div class="slide" id="slide-32">
+        <div class="slide-header">
+          <div>
+            <h2>🏆 Review Quiz Show</h2>
+            <span class="slide-subtitle">Test your knowledge!</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-blue">
+            <p style="font-weight: bold; font-size: 22px; margin-bottom: 12px;">Q: Which modal verb expresses 0% possibility (impossible)?</p>
+            <div class="quiz-option" onclick="checkReview1(this, false)">must</div>
+            <div class="quiz-option" onclick="checkReview1(this, true)">can't</div>
+            <div class="quiz-option" onclick="checkReview1(this, false)">might</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 33: REVIEW GAME 2 -->
+      <div class="slide" id="slide-33">
+        <div class="slide-header">
+          <div>
+            <h2>🎁 Mystery Bag Review</h2>
+            <span class="slide-subtitle">Identify the vocabulary word</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-highlight">
+            <p style="font-weight: 800; font-size: 22px; margin-bottom: 12px;">"A moving staircase that carries shoppers up or down floors."</p>
+            <div class="quiz-option" onclick="checkReview2(this, true)">Escalator</div>
+            <div class="quiz-option" onclick="checkReview2(this, false)">Trolley</div>
+            <div class="quiz-option" onclick="checkReview2(this, false)">Cash desk</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 34: READING SUPPORT -->
+      <div class="slide" id="slide-34">
+        <div class="slide-header">
+          <div>
+            <h2>📖 Reading: Why We Buy Unplanned Items</h2>
+            <span class="slide-subtitle">Short A2+ passage</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card" style="font-size: 18px; line-height: 1.6; background: white;">
+            <p>Many shoppers enter a shopping centre planning to buy only one item, but leave with three! Why does this happen? Stores place expensive items on shelves at <strong>eye level</strong> where customers look first. Bright lights near the <strong>shop window</strong> and special offers at the front right also attract attention. When people feel relaxed, they buy more!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 35: GUIDED WRITING -->
+      <div class="slide" id="slide-35">
+        <div class="slide-header">
+          <div>
+            <h2>✍️ Guided Writing: My Dream Shop</h2>
+            <span class="slide-subtitle">Write a short paragraph describing your shop</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card">
+            <textarea id="dream-shop-writing" rows="6" placeholder="My dream shop is called... It sells... Inside, you can see..."></textarea>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+              <span id="writing-word-count" style="font-size: 15px; color: #64748b;">Words: 0</span>
+              <button class="btn-action" onclick="alert('Great writing! Show it to your teacher.')">Submit Writing</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 36: FINAL ASSESSMENT -->
+      <div class="slide" id="slide-36">
+        <div class="slide-header">
+          <div>
+            <h2>📝 Final Assessment</h2>
+            <span class="slide-subtitle">Check your progress across all skills</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card card-highlight">
+            <p style="font-weight: 800; font-size: 22px; margin-bottom: 12px;">Q1: "It ___ be a ring. It's round and gold."</p>
+            <div class="quiz-option" onclick="checkFinal(this, true)">must</div>
+            <div class="quiz-option" onclick="checkFinal(this, false)">can't</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 37: FINAL SCORE & RESULTS -->
+      <div class="slide" id="slide-37">
+        <div class="slide-header">
+          <div>
+            <h2>🎉 Lesson Completion & Score</h2>
+            <span class="slide-subtitle">Well done on completing the lesson!</span>
+          </div>
+        </div>
+        <div class="slide-body" style="align-items: center; justify-content: center; text-align: center;">
+          <div class="card card-highlight" style="width: 100%; max-width: 500px; padding: 40px;">
+            <div style="font-size: 80px;">🏆</div>
+            <h2 style="font-size: 36px; color: #ea580c; margin-top: 10px;">Great Job!</h2>
+            <p style="font-size: 24px; font-weight: 800; margin-top: 10px;">Your Total Score: <span id="final-score-val" style="color: #0284c7;">0</span> pts</p>
+            <button class="btn-action" style="margin-top: 24px;" onclick="goToSlide(39)">View Certificate ➔</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 38: SELF ASSESSMENT -->
+      <div class="slide" id="slide-38">
+        <div class="slide-header">
+          <div>
+            <h2>✅ Self-Assessment: What I Can Do Now</h2>
+            <span class="slide-subtitle">Check your achievements</span>
+          </div>
+        </div>
+        <div class="slide-body">
+          <div class="card">
+            <ul style="display: flex; flex-direction: column; gap: 14px; font-size: 18px; list-style: none;">
+              <li><input type="checkbox"> I can make logical guesses using <strong>can't, must, might, could, may</strong>.</li>
+              <li><input type="checkbox"> I can explain degrees of certainty.</li>
+              <li><input type="checkbox"> I know 12 shopping vocabulary words.</li>
+              <li><input type="checkbox"> I can understand a speaker's main intention in listening.</li>
+              <li><input type="checkbox"> I can present my dream shop floor plan.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 39: CERTIFICATE -->
+      <div class="slide" id="slide-39">
+        <div class="slide-header">
+          <div>
+            <h2>📜 Certificate of Completion</h2>
+            <span class="slide-subtitle">Smart Shopping & Logical Guesses</span>
+          </div>
+        </div>
+        <div class="slide-body" style="align-items: center; justify-content: center;">
+          <div class="card" style="width: 100%; max-width: 700px; border: 6px double #ea580c; text-align: center; padding: 40px; background: #fff7ed;">
+            <h2 style="font-size: 32px; color: #0f172a; text-transform: uppercase; letter-spacing: 1px;">Certificate of Achievement</h2>
+            <p style="font-size: 18px; color: #64748b; margin-top: 8px;">This is proudly presented to</p>
+            <input type="text" id="cert-student-name" placeholder="Enter Student Name" style="text-align: center; font-size: 26px; font-weight: 800; color: #ea580c; border: none; border-bottom: 2px solid #ea580c; background: transparent; width: 80%; margin: 16px 0;">
+            <p style="font-size: 18px; color: #334155;">for successfully completing the lesson on</p>
+            <h3 style="font-size: 22px; color: #0284c7; margin: 8px 0;">Smart Shopping: Possibility & Impossibility</h3>
+            <p style="font-size: 14px; color: #64748b; margin-top: 20px;">Teacher: Thầy Lê Quốc Thông • 0961 923 983</p>
+            <button class="btn-action" style="margin-top: 20px;" onclick="window.print()">🖨️ Print Certificate</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- FOOTER NAVIGATION -->
+    <footer class="deck-footer">
+      <div class="footer-left">
+        <button class="btn-nav btn-nav-secondary" onclick="goToSlide(1)">🏠 Home</button>
+        <span class="teacher-credit">Bài học được thiết kế bởi Thầy Lê Quốc Thông | 📞 Contact: 0961 923 983</span>
+      </div>
+
+      <div class="footer-center">
+        <span class="slide-number-display" id="slide-num-indicator">Slide 1 / 39</span>
+      </div>
+
+      <div class="footer-right">
+        <button class="btn-nav btn-nav-secondary" id="btn-prev-slide" onclick="changeSlide(-1)">◀ Previous</button>
+        <button class="btn-nav" id="btn-next-slide" onclick="changeSlide(1)">Next ▶</button>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<!-- SLIDE MENU MODAL -->
+<div class="modal-overlay" id="modal-slide-menu">
+  <div class="modal-content">
+    <button class="modal-close" onclick="toggleSlideMenu()">✕</button>
+    <h2 style="font-size: 24px; color: #0f172a; margin-bottom: 16px;">📁 Slide Navigation Menu</h2>
+    <div class="menu-grid" id="menu-grid-container">
+      <!-- Generated via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- TEACHER NOTES MODAL -->
+<div class="modal-overlay" id="modal-teacher-notes">
+  <div class="modal-content">
+    <button class="modal-close" onclick="toggleTeacherNotes()">✕</button>
+    <h2 style="font-size: 24px; color: #ea580c; margin-bottom: 12px;">📝 Teacher Notes & Pedagogy</h2>
+    <div id="teacher-notes-body" style="font-size: 18px; line-height: 1.6; color: #334155;">
+      <!-- Populated dynamically per slide -->
+    </div>
+  </div>
+</div>
+
+<script>
+  // SLIDE TRAVERSAL & GLOBAL STATE
+  let currentSlide = 1;
+  const totalSlides = 39;
+  let score = 0;
+  let completedActivities = new Set();
+  let selectedPaletteItem = '🛒 Trolley';
+
+  // FLASHCARD DATA
+  const flashcards = [
+    { word: 'trolley', icon: '🛒', def: 'A large basket on wheels used for carrying things in a supermarket.', vn: 'Xe đẩy siêu thị', phonetic: '/ˈtrɒli/' },
+    { word: 'checkout', icon: '💳', def: 'The place where you pay for your items in a shop.', vn: 'Quầy thu ngân', phonetic: '/ˈtʃekaʊt/' },
+    { word: 'shop window', icon: '🖼️', def: 'A large window at the front of a shop where goods are displayed.', vn: 'Cửa kính trưng bày', phonetic: '/ʃɒp ˈwɪndəʊ/' },
+    { word: 'shelf', icon: '🗄️', def: 'A flat board fixed to a wall or frame to hold items.', vn: 'Kệ hàng', phonetic: '/ʃelf/' },
+    { word: 'basket', icon: '🧺', def: 'A container for carrying shopping in your hand.', vn: 'Giỏ hàng', phonetic: '/ˈbɑːskɪt/' },
+    { word: 'escalator', icon: '🪜', def: 'A moving staircase that carries people between floors.', vn: 'Thang cuốn', phonetic: '/ˈeskəleɪtə/' },
+    { word: 'exit', icon: '🚪', def: 'A door used to leave a building.', vn: 'Lối ra', phonetic: '/ˈeksɪt/' },
+    { word: 'cash desk', icon: '💵', def: 'The desk in a store where cash is paid.', vn: 'Quầy tính tiền', phonetic: '/kæʃ desk/' },
+    { word: 'store detective', icon: '🕵️', def: 'A person employed by a store to prevent shoplifting.', vn: 'Bảo vệ / Thám tử cửa hàng', phonetic: '/stɔː dɪˈtektɪv/' },
+    { word: 'department', icon: '🏢', def: 'A specialized section of a large store.', vn: 'Gian hàng / Bộ phận', phonetic: '/dɪˈpɑːtmənt/' },
+    { word: 'changing room', icon: '👗', def: 'A room in a shop where you try on clothes.', vn: 'Phòng thay đồ', phonetic: '/ˈtʃeɪndʒɪŋ ruːm/' },
+    { word: 'customer', icon: '🛍️', def: 'A person who buys goods or services from a shop.', vn: 'Khách hàng', phonetic: '/ˈkʌstəmə/' }
+  ];
+  let currentFCIndex = 0;
+
+  // TEACHER NOTES PER SLIDE
+  const teacherNotesData = {
+    1: "Introduction slide. Introduce the unit topic: Smart Shopping and Logical Guesses using modal verbs of certainty.",
+    2: "Review the learning objectives with the class. Encourage students to self-monitor progress.",
+    3: "Warm-up activity. Elicit initial guesses. Focus on the concept of 'How sure are you?'",
+    4: "Textbook Page 63 Read & Listen dialogue. Highlight verbs in orange (can't, must, could, might, may).",
+    5: "Guide students to discover the meaning of might/could vs must vs can't before explicit rules.",
+    6: "Core Grammar Chart. Explain the Certainty Scale qualitatively (Impossible -> Possible -> Very Certain).",
+    7: "Form rule: modal + infinitive (without 'to'). Emphasize common errors like 'must to be' or 'might is'.",
+    8: "Guided practice. Elicit student choices and ask them to explain their certainty percentage.",
+    11: "Textbook Ex 3a. Complete sentences with target product vocabulary.",
+    15: "Vocabulary Unit 1 (Store fixtures & layout). Drill pronunciation using the speaker buttons.",
+    21: "Listening Track 2.18 original interview script. Elicit prediction: How do shops make us spend?",
+    30: "Dream Shop Floor Plan activity. Pair work design project.",
+    39: "Certificate presentation slide. Allow students to type name and print."
+  };
+
+  // INITIALIZATION
+  window.addEventListener('DOMContentLoaded', () => {
+    updateSlideView();
+    buildSlideMenu();
+    initMatchingGame();
+    setupWritingCounter();
+  });
+
+  // SLIDE NAVIGATION LOGIC
+  function goToSlide(slideNum) {
+    if (slideNum < 1 || slideNum > totalSlides) return;
+    document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+    currentSlide = slideNum;
+    const target = document.getElementById(`slide-${currentSlide}`);
+    if (target) target.classList.add('active');
+    updateSlideView();
+  }
+
+  function changeSlide(direction) {
+    goToSlide(currentSlide + direction);
+  }
+
+  function updateSlideView() {
+    document.getElementById('slide-num-indicator').innerText = `Slide ${currentSlide} / ${totalSlides}`;
+    document.getElementById('progress-bar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+    document.getElementById('btn-prev-slide').disabled = (currentSlide === 1);
+    document.getElementById('btn-next-slide').disabled = (currentSlide === totalSlides);
+  }
+
+  // KEYBOARD CONTROLS
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      changeSlide(1);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      changeSlide(-1);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      goToSlide(1);
+    } else if (e.key === 'Escape') {
+      closeModals();
+    }
+  });
+
+  // MODAL TOGGLES
+  function toggleSlideMenu() {
+    const modal = document.getElementById('modal-slide-menu');
+    modal.classList.toggle('active');
+  }
+
+  function toggleTeacherNotes() {
+    const modal = document.getElementById('modal-teacher-notes');
+    const body = document.getElementById('teacher-notes-body');
+    body.innerText = teacherNotesData[currentSlide] || "Focus on encouraging active student participation and logical guessing.";
+    modal.classList.toggle('active');
+  }
+
+  function closeModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {});
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+    }
+  }
+
+  function buildSlideMenu() {
+    const container = document.getElementById('menu-grid-container');
+    container.innerHTML = '';
+    for (let i = 1; i <= totalSlides; i++) {
+      const btn = document.createElement('button');
+      btn.className = `menu-item-btn ${i === currentSlide ? 'current' : ''}`;
+      btn.innerText = `Slide ${i}`;
+      btn.onclick = () => { goToSlide(i); toggleSlideMenu(); };
+      container.appendChild(btn);
+    }
+  }
+
+  // SPEECH SYNTHESIS ENGINE
+  function speakText(text) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-GB';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  // SCORE SYSTEM
+  function addScore(activityId, points) {
+    if (!completedActivities.has(activityId)) {
+      completedActivities.add(activityId);
+      score += points;
+      document.querySelector('#score-display span').innerText = score;
+      document.getElementById('final-score-val').innerText = score;
+    }
+  }
+
+  // WARMUP CHECK
+  function checkWarmup(el, isCorrect) {
+    const fb = document.getElementById('warmup-feedback');
+    if (isCorrect) {
+      el.classList.add('correct');
+      fb.className = 'feedback-box correct';
+      fb.innerText = '✅ Excellent guess! They are buttons. But how sure are you?';
+      addScore('warmup', 10);
+    } else {
+      el.classList.add('wrong');
+      fb.className = 'feedback-box wrong';
+      fb.innerText = '❌ Not quite! Think about the texture and circular shape.';
+    }
+  }
+
+  // PRACTICE CHECKS
+  function checkPracticeA(el, isCorrect) {
+    if (isCorrect) {
+      el.classList.add('correct');
+      addScore('pracA', 10);
+    } else {
+      el.classList.add('wrong');
+    }
+  }
+
+  function checkPracticeB(el, isCorrect) {
+    if (isCorrect) {
+      el.classList.add('correct');
+      addScore('pracB', 10);
+    } else {
+      el.classList.add('wrong');
+    }
+  }
+
+  function checkPracticeC(el, isCorrect) {
+    if (isCorrect) {
+      el.classList.add('correct');
+      addScore('pracC', 10);
+    } else {
+      el.classList.add('wrong');
+    }
+  }
+
+  // TEXTBOOK EX 3 CHECK
+  function checkEx3() {
+    const v1 = document.getElementById('ex3-1').value.trim().toLowerCase();
+    const v2 = document.getElementById('ex3-2').value.trim().toLowerCase();
+    const v3 = document.getElementById('ex3-3').value.trim().toLowerCase();
+    const v4 = document.getElementById('ex3-4').value.trim().toLowerCase();
+
+    if (v1 === 'car' && v2 === 'ring' && v3 === 'shampoo' && v4 === 'spaghetti') {
+      alert('🎉 All Ex 3 answers correct!');
+      addScore('ex3', 20);
+    } else {
+      alert('Keep trying! Check spelling: car, ring, shampoo, spaghetti.');
+    }
+  }
+
+  // TEXTBOOK EX 4 CHECK
+  function checkEx4() {
+    const a1 = document.getElementById('ex4-1').value;
+    const a2 = document.getElementById('ex4-2').value;
+    const a3 = document.getElementById('ex4-3').value;
+    if (a1 === 'might' && a2 === "can't" && a3 === 'must') {
+      alert('🎉 Dialogue 1 Correct!');
+      addScore('ex4', 20);
+    } else {
+      alert('Review modal meanings: might (possible), can\'t (impossible), must (certain).');
+    }
+  }
+
+  // FLASHCARD LOGIC
+  function flipFlashcard() {
+    document.getElementById('fc-card').classList.toggle('flipped');
+  }
+
+  function updateFlashcardUI() {
+    const item = flashcards[currentFCIndex];
+    document.getElementById('fc-icon').innerText = item.icon;
+    document.getElementById('fc-word').innerText = item.word;
+    document.getElementById('fc-phonetic').innerText = item.phonetic;
+    document.getElementById('fc-def').innerText = item.def;
+    document.getElementById('fc-vn').innerText = item.vn;
+    document.getElementById('fc-card').classList.remove('flipped');
+  }
+
+  function nextFlashcard() {
+    currentFCIndex = (currentFCIndex + 1) % flashcards.length;
+    updateFlashcardUI();
+  }
+
+  function prevFlashcard() {
+    currentFCIndex = (currentFCIndex - 1 + flashcards.length) % flashcards.length;
+    updateFlashcardUI();
+  }
+
+  function speakFlashcard() {
+    speakText(flashcards[currentFCIndex].word);
+  }
+
+  // MATCHING GAME
+  let selectedWordNode = null;
+  function initMatchingGame() {
+    const wordsCol = document.getElementById('match-words-col');
+    const defsCol = document.getElementById('match-defs-col');
+    if (!wordsCol || !defsCol) return;
+
+    wordsCol.innerHTML = '';
+    defsCol.innerHTML = '';
+
+    const shuffleCards = [...flashcards].sort(() => 0.5 - Math.random()).slice(0, 4);
+
+    shuffleCards.forEach(item => {
+      const wCard = document.createElement('div');
+      wCard.className = 'match-card';
+      wCard.innerText = item.word;
+      wCard.dataset.word = item.word;
+      wCard.onclick = () => selectWordMatch(wCard);
+      wordsCol.appendChild(wCard);
+    });
+
+    [...shuffleCards].sort(() => 0.5 - Math.random()).forEach(item => {
+      const dCard = document.createElement('div');
+      dCard.className = 'match-card';
+      dCard.innerText = item.def;
+      dCard.dataset.word = item.word;
+      dCard.onclick = () => selectDefMatch(dCard);
+      defsCol.appendChild(dCard);
+    });
+  }
+
+  function selectWordMatch(card) {
+    if (card.classList.contains('matched')) return;
+    document.querySelectorAll('#match-words-col .match-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedWordNode = card;
+  }
+
+  function selectDefMatch(card) {
+    if (!selectedWordNode || card.classList.contains('matched')) return;
+    if (selectedWordNode.dataset.word === card.dataset.word) {
+      selectedWordNode.classList.remove('selected');
+      selectedWordNode.classList.add('matched');
+      card.classList.add('matched');
+      selectedWordNode = null;
+      addScore('matchGame', 10);
+    } else {
+      card.style.borderColor = '#ef4444';
+      setTimeout(() => card.style.borderColor = '#cbd5e1', 500);
+    }
+  }
+
+  // MALL MAP
+  function showMapDetail(title, desc) {
+    const card = document.getElementById('map-detail-card');
+    card.style.display = 'block';
+    card.innerHTML = `<h4 style="color:#ea580c;">${title}</h4><p>${desc}</p>`;
+    speakText(title);
+  }
+
+  // LISTENING AUDIO SIMULATOR
+  function playListeningAudio() {
+    speakText("Today on Smart Shopping, James Lewis explains how shopping centres encourage people to spend. Escalators are placed far apart so you pass many shop windows. Expensive items are placed at eye level!");
+  }
+
+  function stopListeningAudio() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  function checkListening1(el, isCorrect) {
+    if (isCorrect) {
+      el.classList.add('correct');
+      addScore('list1', 10);
+    } else el.classList.add('wrong');
+  }
+
+  function checkListDetail(el, isCorrect) {
+    if (isCorrect) {
+      el.classList.add('correct');
+      addScore('listDet', 10);
+    } else el.classList.add('wrong');
+  }
+
+  function checkIntention(el, isCorrect) {
+    if (isCorrect) {
+      el.classList.add('correct');
+      addScore('intent', 10);
+    } else el.classList.add('wrong');
+  }
+
+  function checkMix(el, isCorrect) {
+    if (isCorrect) {
+      el.classList.add('correct');
+      addScore('mix', 10);
+    } else el.classList.add('wrong');
+  }
+
+  function checkMystery() {
+    const val = document.getElementById('mystery-input').value.trim().toLowerCase();
+    if (val === 'shampoo') {
+      alert('🎉 Correct! It is shampoo! It must be shampoo!');
+      addScore('mystery', 15);
+    } else {
+      alert('Try again! Think of liquid used for washing hair.');
+    }
+  }
+
+  // DREAM SHOP BUILDER
+  function selectPalette(item) {
+    selectedPaletteItem = item;
+    document.querySelectorAll('.palette-item').forEach(p => p.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+  }
+
+  function placeGrid(cell) {
+    cell.innerText = selectedPaletteItem;
+    cell.style.background = '#fff7ed';
+    cell.style.borderColor = '#ea580c';
+  }
+
+  function checkReview1(el, isCorrect) {
+    if (isCorrect) el.classList.add('correct'); else el.classList.add('wrong');
+  }
+  function checkReview2(el, isCorrect) {
+    if (isCorrect) el.classList.add('correct'); else el.classList.add('wrong');
+  }
+  function checkFinal(el, isCorrect) {
+    if (isCorrect) el.classList.add('correct'); else el.classList.add('wrong');
+  }
+
+  // WRITING COUNTER
+  function setupWritingCounter() {
+    const area = document.getElementById('dream-shop-writing');
+    if (!area) return;
+    area.addEventListener('input', () => {
+      const words = area.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+      document.getElementById('writing-word-count').innerText = `Words: ${words}`;
+    });
+  }
+</script>
+</body>
+</html>
